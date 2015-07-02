@@ -10,7 +10,21 @@ Options:
 """
 from docopt import docopt
 from araneae import tasks
+import os
+import yaml
+import logging
 # from araneae import Araneae
+
+logger = logging.getLogger('core')
+
+def loadConfig():
+    config = {}
+    for i in ['config.yaml']:
+        if os.path.exist(i):
+            config.update(yaml.load(open(i))) # FIXME: add shadow update
+            logger.debug('Config updated with config file %s', os.path.abspath(i))
+    return config
+
 def main():
     argument = docopt(__doc__, version="araneae 0.1")
     print(argument)
