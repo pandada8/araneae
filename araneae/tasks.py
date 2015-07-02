@@ -5,12 +5,17 @@ from .parser import get_parser
 def parse_tasks(tasks):
     parsed = []
     for i in tasks:
-        parsed.append(yaml.load(os.path.join('tasks', i + '.yaml')))
+        if not i.startswith("/"):
+            i = os.path.join(os.path.split(__file__)[0], 'tasks', i+".yaml")
+        if not os.path.exists(i):
+            print("Can't find the {}".format(i))
+            continue
+        parsed.append(yaml.load(open(i)))
     return parsed
 
 def parse_all_tasks():
     tasks = []
-    for i in os.listdirs('tasks'):
+    for i in os.listdir(os.path.join(os.path.split(__file__)[0], 'tasks')):
         if i.endswith('.yaml'):
             tasks.append(os.path.splitext(i)[0])
     return parse_tasks(tasks)

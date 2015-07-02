@@ -25,6 +25,14 @@ def loadConfig():
             logger.debug('Config updated with config file %s', os.path.abspath(i))
     return config
 
+def print_tasks(tasks):
+    for i in tasks:
+        f = "{name}\n" \
+            "  Type: {type}\n" \
+            "  Source: {url}\n" \
+            "  Target Language: {lang}\n"
+        print(f.format(**i))
+
 def main():
     argument = docopt(__doc__, version="araneae 0.1")
     print(argument)
@@ -38,7 +46,8 @@ def main():
             araneae.run()
             raise SystemExit
         elif argument['list']:
-            tasks.parse_all_tasks()
+            all_tasks = tasks.parse_all_tasks()
+            print_tasks(all_tasks)
             raise SystemExit
     elif argument['help']:
         print(__doc__)
