@@ -1,0 +1,5 @@
+Task:
+    url: https://wiki.archlinux.org/index.php/
+    type: wikipedia
+    target: zh_CN
+    token: "<sample_token_here>"

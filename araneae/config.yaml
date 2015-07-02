@@ -1,0 +1,5 @@
+Core:
+    max_connection: 60 # how many connection send in one minute?
+    smtp_server: smtp.example.com:586
+    smtp_email: wikibot@example.com
+    smtp_password: 'Write your password here'
