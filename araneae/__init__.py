@@ -1,8 +1,8 @@
 """ Spider
 
 Usage:
-    araneae task list [-v]
-    araneae task run [-v] <tasks>...
+    araneae task list [-v | -vv | -vvv]
+    araneae task run [-v | -vv | -vvv] <tasks>...
 
 Options:
     -v -vv -vvv   Verbose Mode
