@@ -9,7 +9,7 @@ Options:
 
 """
 from docopt import docopt
-from araneae import tasks
+from . import tasks
 import os
 import yaml
 import logging
@@ -42,7 +42,7 @@ def main():
                 todo_tasks = tasks.parse_all_tasks()
             else:
                 todo_tasks = tasks.parse_tasks(argument['<tasks>'])
-            araneae = Araneae(todo_tasks)
+            araneae = Araneae(todo_tasks)  #TODO: rewrite whole app with Araneae class
             araneae.run()
             raise SystemExit
         elif argument['list']:
