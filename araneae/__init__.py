@@ -17,6 +17,9 @@ import logging
 # from araneae import Araneae
 
 logger = logging.getLogger('core')
+# disable the requests log
+requests_logger = logging.getLogger('requests.packages.urllib3.connectionpool')
+requests_logger.setLevel(60)
 
 def loadConfig():
     config = {}
@@ -36,7 +39,7 @@ def print_tasks(tasks):
 
 def run_tasks(todo_tasks):
     for i in todo_tasks:
-        logger.info('Starting %s', i['name'])
+        logger.info('Starting task %s', i['name'])
         t = tasks.Task(i)
         t.run()
 
@@ -47,7 +50,7 @@ def main():
             logging.basicConfig(level=logging.INFO)
         elif argument['-v'] == 2:
             logging.basicConfig(level=logging.DEBUG)
-        logging.info('Welcome!')
+        logging.info('Welcome to araneae, a python-powered wiki robot!')
         # set basic screen logging stuff
 
     if argument['task']:

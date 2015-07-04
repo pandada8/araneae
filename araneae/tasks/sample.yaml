@@ -1,5 +1,5 @@
 name: archlinux
 url: https://wiki.archlinux.org/api.php
 type: wikipedia
-lang: zh_CN
+lang: zh
 token: "<sample_token_here>"
