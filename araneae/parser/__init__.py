@@ -12,11 +12,11 @@ def reg_parser(name):
         return cls
     return wrapper
 
-def get_parser(type, info):
-    if type in _parser:
-        return _parser[type](info)
+def get_parser(info):
+    if info['type'] in _parser:
+        return _parser[info['type']](info)
     else:
-        raise NoSuchParser(type)
+        raise NoSuchParser(info['type'])
 
 class ParserBase(object):
 

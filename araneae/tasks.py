@@ -1,6 +1,9 @@
 import yaml
 import os
 from .parser import get_parser
+import logging
+
+logger = logging.getLogger('tasks')
 
 def parse_tasks(tasks):
     parsed = []
@@ -23,12 +26,14 @@ def parse_all_tasks():
 class Task:
     def __init__(self, info):
         self.info = info
+        logger.debug('got info', info)
         self.parser = get_parser(info)
     def run(self):
         try:
             self.parser.run()
-        except:
-            pass
+        except Exception as e:
+            logger.exception(e)
+
 
     def report(self):
         pass
