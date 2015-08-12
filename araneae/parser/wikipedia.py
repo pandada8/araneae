@@ -5,7 +5,6 @@ import time
 import re
 from http.cookiejar import MozillaCookieJar
 import os
-from datetime import datetime
 from dateutil.parser import parse
 
 logger = logging.getLogger('parser.wikipedia')
@@ -18,15 +17,14 @@ class WikipediaParser(ParserBase):
     This parser use a small part of the mediawiki api to get the max compatibility.
     """
 
-
     def __init__(self, config):
         self.r = requests.session()
 
-        # deal with the 
+        # deal with the session
         folder = os.path.expanduser('~/.cache/araneae/session')
         os.makedirs(folder, exist_ok=True)
         path = os.path.join(folder, config['name'] + '.txt')
-        self.r.cookies = FileCookieJar(path)
+        self.r.cookies = MozillaCookieJar(path)
 
         if os.path.exists(path):
             self.r.cookies.load()
@@ -34,14 +32,15 @@ class WikipediaParser(ParserBase):
         self.config = config
 
         self.r.headers["User-Agent"] = "Araneae wiki bot/ (pandada8@gmail.com)"
-
         self.user_rights = []
+        self.logined = False
 
-        self.bot = False  # if we are bot, we have a big limit
         # check if we have a robot account
         if self.config.get('username') and self.config.get('password'):
             self.auth = (self.config['username'], self.config['password'])
             logger.debug('load wiki account')
+        else:
+            self.auth = None
 
     def login(self):
         if self.auth:
@@ -155,18 +154,17 @@ class WikipediaParser(ParserBase):
         important = ['Out of date', 'Translateme']
         # prepare: flat the data and add langs
 
-
-        # the question is in the archlinux wiki, all page's `pagelanguage` is 'en', and we can't also judge the name by 
-        # langlinks, since many of them are the same
+        # the question is in the archlinux wiki, all page's `pagelanguage` is 'en', and we can't also judge
+        # the name by langlinks, since many of them are the same
         # so the langlinks only used to show the languages this paged translated into
         # and not used in judging which the page used.
         for i in all_posts:
             lang = non_english.search(i['title'])
             i['lang'] = lang.strip('()')
-            i['langs'] = dict((j['lang'], j['url']) for j in i.get('langlinks', [])) # the langlinks may be empty
+            i['langs'] = dict((j['lang'], j['url']) for j in i.get('langlinks', []))  # the langlinks may be empty
             i['templates'] = [j for j in i.get('templates', [])]
             # i['templates'] = [j for j in i.get('templates', []) if i in important] # TODO: Check the corrent name of the translateme
-            
+
             # should we remove the original links?
             # i.remove('langlinks')
 
@@ -185,10 +183,9 @@ class WikipediaParser(ParserBase):
                     '*': i
                 }
 
-        
         result = []
 
-        for i,j in pages.items():
+        for i, j in pages.items():
             logger.debug('Deal with %s', i)
             if len(j) == 1:
                 (lang, page), = j.items()
@@ -267,7 +264,7 @@ class WikipediaParser(ParserBase):
         data = self._api_call('GET', param)
         self.page_number = data['query']['statistics']['pages']
         self.article_number = data['query']['statistics']['articles']
-        logger.info('Got info:\n' '\tPages:\t%d' '\tArticles:\t%d', self.page_number, self.article_number)
+        logger.info('Got info:' '\tPages:\t%d' '\tArticles:\t%d', self.page_number, self.article_number)
         for i in data['query']['namespaces'].values():
             if i['*'] == "":
                 # we got the main namespace
@@ -277,7 +274,6 @@ class WikipediaParser(ParserBase):
         else:
             logger.warn('fail to find the main namespace, use the 0 as the main namespace id')
             self.target_namespace = 0
-
 
     def run(self):
         try:
