@@ -2,6 +2,9 @@ import yaml
 import os
 from .parser import get_parser
 import logging
+import smtplib
+from email.mime.text import MIMEText
+from jinja2 import Template
 
 logger = logging.getLogger('tasks')
 
@@ -28,12 +31,17 @@ class Task:
         self.info = info
         logger.debug('got info', info)
         self.parser = get_parser(info)
+        self.fail = False
+
     def run(self):
         try:
             self.parser.run()
         except Exception as e:
             logger.exception(e)
+            self.fail = True
 
+    def generate_the_report(self):
+        temp = Template('./mail_template.html')
+        return 
 
     def report(self):
-        pass

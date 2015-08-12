@@ -1,12 +1,12 @@
 """ Spider
 
 Usage:
-    araneae task list [-v | -vv]
-    araneae task run [-v | -vv] <tasks>...
-    araneae task run [-v | -vv]
+    araneae task list [-v]
+    araneae task run [-v] <tasks>...
+    araneae task run [-v]
 
 Options:
-    -v -vv Verbose Mode
+    -v Verbose Mode, Output the debug info
 
 """
 from docopt import docopt
@@ -46,11 +46,10 @@ def run_tasks(todo_tasks):
 def main():
     argument = docopt(__doc__, version="araneae 0.1")
     if argument['-v']:
-        if argument['-v'] == 1:
-            logging.basicConfig(level=logging.INFO)
-        elif argument['-v'] == 2:
-            logging.basicConfig(level=logging.DEBUG)
-        logging.info('Welcome to araneae, a python-powered wiki robot!')
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+    logging.info('Welcome to araneae, a python-powered wiki robot!')
         # set basic screen logging stuff
 
     if argument['task']:

@@ -8,7 +8,8 @@ class Cache(object):
         self._db = self._init_db()
 
     def _init_db(self):
-        db_path = os.path.normpath(os.path.join(os.path.split(__file__)[0], '../test.db'))
+        # db_path = os.path.normpath(os.path.join(os.path.split(__file__)[0], '../test.db'))
+        db_path = ':memory:'
         conn = sqlite3.connect(db_path, check_same_thread=False, isolation_level=None) # TODO: config this cache path # TODO, avoid usage of empty isolation_level
         # try to check if we have the table
         if not conn.execute('SELECT NAME FROM sqlite_master WHERE type = "table" AND name = ?', ('cache',)).fetchone():
