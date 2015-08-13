@@ -130,7 +130,7 @@ class WikipediaParser(ParserBase):
                 logger.debug('page %s : "%s", rv: %s, contentmodel: %s', i['pageid'], i['title'], i['lastrevid'], i['contentmodel'])
                 fetched.append(i)
 
-            logger.info(' pages fetched', len(fetched))
+            logger.info('%d pages fetched', len(fetched))
 
             if 'query-continue' in data:
                 continue_from = data['query-continue']['allpages']['gapcontinue']
