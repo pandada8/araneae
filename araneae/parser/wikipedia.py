@@ -112,7 +112,6 @@ class WikipediaParser(ParserBase):
 
     def get_all_post(self):
         continue_from = ""
-        fetched_numbers = 0
         fetched = []
         while True:
             params = {
@@ -131,14 +130,14 @@ class WikipediaParser(ParserBase):
                 logger.debug('page %s : "%s", rv: %s, contentmodel: %s', i['pageid'], i['title'], i['lastrevid'], i['contentmodel'])
                 fetched.append(i)
 
-            logger.info(' pages fetched', len(fetched_numbers))
+            logger.info(' pages fetched', len(fetched))
 
             if 'query-continue' in data:
                 continue_from = data['query-continue']['allpages']['gapcontinue']
             else:
                 break
 
-        logger.info('Fetching finished, fetch %d pages in all', len(fetched_numbers))
+        logger.info('Fetching finished, fetch %d pages in all', len(fetched))
         return fetched
 
     def find_the_untranslated(self, all_posts):
