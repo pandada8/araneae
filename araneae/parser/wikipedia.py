@@ -132,7 +132,7 @@ class WikipediaParser(ParserBase):
 
             logger.info('%d pages fetched', len(fetched))
 
-            if 'query-continue' in data:
+            if 'query-continue' in data and 'allpages' in data['query-continue']:
                 continue_from = data['query-continue']['allpages']['gapcontinue']
             else:
                 break
