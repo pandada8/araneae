@@ -137,10 +137,30 @@ class WikipediaParser(ParserBase):
             else:
                 break
 
+        with open('2.json', 'w') as fp:
+            import json
+            json.dump(fetched, fp)
         logger.info('Fetching finished, fetch %d pages in all', len(fetched))
         return fetched
 
-    def find_the_untranslated(self, all_posts):
+    def find_the_result(self, all_posts):
+
+        def generate_info(zh_cn=None, en=None):
+            if zh_cn is None and en is None:
+                raise TypeError("The zh_cn and en cannot be both none")
+            if zh_cn is None:
+                page = en
+                page['status'] = 'untranslated'
+            elif en is None:
+                page = zh_cn
+                page['status'] = "orphan"
+            else:
+                page = zh_cn
+                if parse(zh_cn['touched']) < parse(en['touched']):
+                    page['status'] = 'outdated'
+                else:
+                    page['status'] = 'normal'
+            return page
 
         def comparre_time(iso1, iso2):
             """
@@ -149,7 +169,8 @@ class WikipediaParser(ParserBase):
             return parse(iso1) < parse(iso2)
 
         pages = {}
-        non_english = re.compile(r'\(([^\x00-\x7F]+?)\)')
+        # non_english = re.compile(r'\(([^\x00-\x7F]+?)\)')
+        non_english = re.compile(r'\((\w+?)\)')
         important = ['Out of date', 'Translateme']
         # prepare: flat the data and add langs
 
@@ -159,17 +180,18 @@ class WikipediaParser(ParserBase):
         # and not used in judging which the page used.
         for i in all_posts:
             lang = non_english.search(i['title'])
-            i['lang'] = lang.strip('()')
+
             i['langs'] = dict((j['lang'], j['url']) for j in i.get('langlinks', []))  # the langlinks may be empty
-            i['templates'] = [j for j in i.get('templates', [])]
+            i['templates'] = [j['title'].replace('Template:', '') for j in i.get('templates', [])]
             # i['templates'] = [j for j in i.get('templates', []) if i in important] # TODO: Check the corrent name of the translateme
 
             # should we remove the original links?
             # i.remove('langlinks')
 
             # store the data in a dict
-            if i['lang']:
-                original_title = i['title'].replace(lang, "")
+            if lang:
+                i['lang'] = lang.group().strip('()')
+                original_title = i['title'].replace(lang.group(), "").strip()
 
                 if pages.get(original_title):
                     pages[original_title][i['lang']] = i
@@ -178,81 +200,39 @@ class WikipediaParser(ParserBase):
                         i['lang']: i
                     }
             else:
-                pages[i['title']] = {
+                i['lang'] = 'en'
+                pages[i['title'].strip()] = {
                     '*': i
                 }
 
         result = []
 
-        for i, j in pages.items():
-            logger.debug('Deal with %s', i)
-            if len(j) == 1:
-                (lang, page), = j.items()
-                if re.search('[\x00-\x7F]+', page['title']).group() == page['title']:
-                    # pure ascii, should be a english page
-                    page['status'] = 'untranslated'
-                else:
-                    page['status'] = 'ignore'
-                result.append(page)
+        def find_zh_CN(pages):
+            if pages.get('zh-cn'):
+                return pages['zh-cn']
+            for i, j in pages.items():
+                if '简体中文' in j['title']:
+                    return j
+
+        def find_en(pages):
+            if pages.get('en'):
+                return pages['en']
             else:
-                langs = set(sum(i['langs'] for i in j.values()))
-                if not langs:
-                    # untranslated
-                    page = j.values[0]
-                    page['status'] = 'untranslated'
-                    result.append(page)
-                    continue
+                return list(pages.values())[0]
 
-                if 'zh-cn' in langs:
-                    # let's find out which page we have is in chinese
-                    if '简体中文' in j.keys():
-                        page = j['简体中文']
-                        if "*" in j.keys():
-                            # good, simple question
-                            en_page = j['*']
-                            if comparre_time(page['touched'], en_page['touched']):
-                                page['status'] = 'outdated'
-                            else:
-                                page['status'] = 'normal'
-                        else:
-                            # but we have no english version
-                            page['status'] = 'Orphan'
-                    else:
-                        # IMPORTANT!!!!
-                        # we can't find a chinese version, consider untranslated
+        for title, passages in pages.items():
+            logger.debug('Deal with %s', title)
 
-                        # try to find a english version
-                        link = (langs.get('en') or langs[0])['link']
-                        page = j.values()[0]
-                        page['status'] = 'untranslated'
-                        page['other'] = 'no chinese version found but have zh-cn link'
-                        logger.warn('Cannot find chinese version of %s: %s ', page['title'], link)
-                elif '简体中文' in j.keys():
-                    page = j['简体中文']
-                    page['other'] = 'no langlink'
-                    logger.warn("Cannot find langlink of %s", page['title'])
-                    if "*" in j.keys():
-                        # not so complicated
-                        en_page = j['*']
-                        if comparre_time(page['touched'], en_page['touched']):
-                            page['status'] = 'outdated'
-                        else:
-                            page['status'] = 'normal'
-                    else:
-                        # again we have no english version
-                        page['other'] += ", no english version(maybe wrong title?)"
-                        page['status'] += 'Orphan'
-                        logger.warn('Cannot find english version of %s: %s ', page[''], link)
-                else:
-                    if "*" in j.keys():
-                        page = j['*']
-                    else:
-                        page = j.values()[0]
-                    page['status'] = 'untranslated'
+            zh_cn = find_zh_CN(passages)
+            en = find_en(passages)
+            # print(zh_cn, en, pages)
+            try:
+                page = generate_info(zh_cn=zh_cn, en=en)
+            except TypeError:
+                raise  # todo: deal with the error
+            result.append(page)
 
-                result.append(page)
-
-            return result
+        return result
 
     def find_main_namespace(self):
         param = {
@@ -281,9 +261,10 @@ class WikipediaParser(ParserBase):
             self.find_main_namespace()
             all_post = self.get_all_post()
             self.result = self.find_the_result(all_post)
-            import json
-            with open('1.json') as fp:
-                json.dump(self.result, fp)
+
         except Exception as e:
             logger.exception(e)
             logger.error('unexcepted expcetion occured')
+
+    def get_result(self):
+        return self.result
