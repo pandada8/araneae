@@ -45,26 +45,25 @@
           </tr>
           <tr>
             <td style="padding: 0;">
-              <p>Out Of Date</p>
+              {% for t in data.keys()|sort %}
+              <p>{{t | capitalize}}</p>
               <table style="width: 100%;text-align:center">
                 <tr border=1>
-                  <td>
-                    title
-                  </td>
-                  <td>
-                    touched
-                  </td>
-                  <td>
-                    templates
-                  </td>
-                  <td>
-                    status
-                  </td>
+                  <td>title</td>
+                  <td>touched</td>
+                  <td>templates</td>
+                  <td>status</td>
                 </tr>
-                {% for i in untranslated %}
-                <tr></tr>
+                {% for i in data[t] %}
+                <tr>
+                  <td>{{i.title}}</td>
+                  <td>{{i.touched}}</td>
+                  <td>{{i.templates}}</td>
+                  <td>{{i.status}}</td>
+                </tr>
                 {% endfor %}
               </table>
+              {% endfor %}
             </td>
           </tr>
         </table>

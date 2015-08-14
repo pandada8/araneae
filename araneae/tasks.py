@@ -3,11 +3,14 @@ import os
 from .parser import get_parser
 import logging
 import smtplib
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime
 from jinja2 import Template
 from csv import DictWriter
 import tempfile
+
+
 
 logger = logging.getLogger('tasks')
 
@@ -60,13 +63,18 @@ class Task:
         csv_writer = DictWriter(output, output_fileds, extrasaction="ignore")
         csv_writer.writeheader()
         csv_writer.writerows(sorted(self.parser.result, key=lambda x: (x['status'], x['title'])))
+        # we first sort by the status then sort by the title
         output.close()
         self.csv_path = output.name
 
 
     def generate_the_report(self):
 
-        temp = Template('./mail_template.html')
+        self.generated = datetime.now()
+        template_html = os.path.join(os.path.split(__file__)[0], 'mail_template.html')
+        template_txt = os.path.join(os.path.split(__file__)[0], 'mail_template.txt')
+        html = Template(open(template_html).read())
+        txt = tempfile(open(template_txt).read())
         pages = {
             "untranslated": [],
             "orphan": [],
@@ -75,16 +83,43 @@ class Task:
         }
         for i in self.parser.result:
             pages[i['status']].append(i)
-
+        for i in pages:
+            pages[i] = sorted(pages[i], key=lambda x: (x['title'], x['touched']))
         data = {
-            "time": datetime.now(),
+            "time": self.generated,
             "tasks": self.info['name'],
-            "pages": sum(i for i in pages.values())
+            "pages": sum(len(i) for i in pages.values()),
+            "translated": len(pages['normal']) + len(pages['orphan']),
+            "todo": len(pages['untranslated']) + len(pages['outdated']),
+            'data': pages
         }
-        data.update(pages)
-        self.generated = temp.render(data=self.parser.get_result(), **data)
-        print(self.generated)
-        
+        data['data'].pop('normal')
+        self.generated_html = html.render(**data)
+        self.generated_txt = txt.render(**data)
+
+        logger.info('Finished generate the txt and html report')
+
 
     def send_report(self):
-        target = self.config['Core']['smtp_email']
+
+        sender = self.config['Core']['smtp_email']
+        reciver = self.info['report']
+
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = 'Araneae Result ({})'.format(self.generated)
+        msg['From'] = sender
+        msg['To'] = reciver
+        part1 = MIMEText(self.generated_txt, "plain")
+        part2 = MIMEText(self.generated_html, 'html')
+        msg.attach(part1)
+        msg.attach(part2)
+
+        server, port = self.config['Core']['smtp_server'].split(':')
+        mail = smtplib.SMTP(server, port)
+
+        mail.ehlo()
+
+        mail.starttls()
+        mail.login(sender, self.config['Core']['smtp_password'])
+        mail.send(sender, reciver, msg.as_string())
+        mail.quit()

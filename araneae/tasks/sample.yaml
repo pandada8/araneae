@@ -3,5 +3,6 @@ url: https://wiki.archlinux.org/api.php
 type: wikipedia
 lang: zh
 token: "<sample_token_here>"
+report: "admin@wiki.com"
 username: "" # left blank or remove the item if you don't have a account
 password: "" # same

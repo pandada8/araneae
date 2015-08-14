@@ -137,9 +137,6 @@ class WikipediaParser(ParserBase):
             else:
                 break
 
-        with open('2.json', 'w') as fp:
-            import json
-            json.dump(fetched, fp)
         logger.info('Fetching finished, fetch %d pages in all', len(fetched))
         return fetched
 
