@@ -5,9 +5,11 @@ import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
 from datetime import datetime
 from jinja2 import Template
 from csv import DictWriter
+from email import encoders
 import tempfile
 
 
@@ -64,7 +66,12 @@ class Task:
         csv_writer.writerows(sorted(self.parser.result, key=lambda x: (x['status'], x['title'])))
         # we first sort by the status then sort by the title
         output.close()
-        self.csv_path = output.name
+        csv_path = output.name
+        logger.info('Finished generated the csv repo')
+        with open(csv_path, 'rb') as fp:
+            self.csv = fp.read()
+        os.unlink(csv_path)
+        logger.info('CSV deleted')
 
     def generate_the_report(self):
 
@@ -72,7 +79,7 @@ class Task:
         template_html = os.path.join(os.path.split(__file__)[0], 'mail_template.html')
         template_txt = os.path.join(os.path.split(__file__)[0], 'mail_template.txt')
         html = Template(open(template_html).read())
-        txt = tempfile(open(template_txt).read())
+        txt = Template(open(template_txt).read())
         pages = {
             "untranslated": [],
             "orphan": [],
@@ -111,12 +118,21 @@ class Task:
         msg.attach(part1)
         msg.attach(part2)
 
+        part = MIMEBase("application", "octet-stream")
+        part.set_payload(self.csv)
+        encoders.encode_base64(part)
+        part.add_header('Content-Disposition', 'attachment; filename="result.csv"')
+        msg.attach(part)
+
         server, port = self.config['Core']['smtp_server'].split(':')
         mail = smtplib.SMTP(server, port)
+        logger.info('Connnect to the SMTP Server')
 
         mail.ehlo()
 
         mail.starttls()
         mail.login(sender, self.config['Core']['smtp_password'])
-        mail.send(sender, reciver, msg.as_string())
+        logger.info('Logined success!')
+        mail.sendmail(sender, reciver, msg.as_string())
+        logger.info('Sent Mail')
         mail.quit()

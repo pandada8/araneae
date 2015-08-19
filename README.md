@@ -33,8 +33,8 @@
 
 ### todo
 
-[ ] 自动添加Out-of-Date Template
-[ ] remove the duplicated code
+[ ] 自动添加Out-of-Date Template  
+[ ] remove the duplicated code  
 
 ## License
 
