@@ -11,7 +11,6 @@ from csv import DictWriter
 import tempfile
 
 
-
 logger = logging.getLogger('tasks')
 
 
@@ -67,7 +66,6 @@ class Task:
         output.close()
         self.csv_path = output.name
 
-
     def generate_the_report(self):
 
         self.generated = datetime.now()
@@ -98,7 +96,6 @@ class Task:
         self.generated_txt = txt.render(**data)
 
         logger.info('Finished generate the txt and html report')
-
 
     def send_report(self):
 

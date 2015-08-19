@@ -34,8 +34,7 @@ def print_tasks(tasks):
     for i in tasks:
         f = "{name}\n" \
             "  Type: {type}\n" \
-            "  Source: {url}\n" \
-            "  Target Language: {lang}\n"
+            "  Source: {url}\n"
         print(f.format(**i))
 
 
