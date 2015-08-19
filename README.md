@@ -1,5 +1,7 @@
 # Araneae
 
+![](screenshot.png)
+
 用于汇总 Wiki 翻译情况的 Wiki Bot
 
 ## 依赖
