@@ -58,3 +58,4 @@ docs/_build/
 target/
 
 test.db
+config.yaml
