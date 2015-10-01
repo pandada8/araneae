@@ -1,2 +1,2 @@
-from araneae import main
+from . import main
 main()

@@ -1,5 +1,5 @@
 import requests
-from araneae.parser import reg_parser, ParserBase
+from ..parser import reg_parser, ParserBase
 import logging
 import time
 import re
